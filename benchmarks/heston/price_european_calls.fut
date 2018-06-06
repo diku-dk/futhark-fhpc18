@@ -300,7 +300,8 @@ let price_european_calls [num_points] [num_maturities] [num_quotes]
 
        -- write reduction as loop to avoid pointless segmented
        -- reduction (the inner parallelism is not needed).
-       let res = map (foldl (+) (int 0)) (transpose (map2 iter x w))
+       let res = map (\xs -> loop acc = int 0 for i < num_points do acc + xs[i])
+                     (transpose (map2 iter x w))
        in map3 (\moneyness resk m ->
                let day_count_fraction = unsafe day_count_fractions[m]
                let sigma_sqrtt = R.sqrt (sigma2 day_count_fraction * day_count_fraction)
