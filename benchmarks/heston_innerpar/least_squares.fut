@@ -1,6 +1,6 @@
 -- | Parameter calibration based on genetic least-squares optimisation.
 
-import "/futlib/random"
+import "../lib/github.com/diku-dk/cpprandom/random"
 
 module type least_squares = {
   -- | The representation of real numbers.
@@ -143,7 +143,7 @@ module mk_least_squares (real: real) (rand: rng_engine)
                        if i32.(j == j0) || real.(r <= cr && lower_bound <= aux && aux <= upper_bound)
                        then aux
                        else x_i_j)
-                      (zip (iota num_free_vars) rs lower_bounds upper_bounds auxs x_i)
+                      (zip6 (iota num_free_vars) rs lower_bounds upper_bounds auxs x_i)
 
        in (rng, v_i))
 
@@ -152,7 +152,7 @@ module mk_least_squares (real: real) (rand: rng_engine)
       (loop (fx0, best_idx, fx, x) = (fx0, best_idx, copy fx, copy x) for i < np do
          let f_v = objective' v[i]
          let x' = x with [i] <- copy (real.(if f_v < fx[i] then v[i] else x[i]))
-         let fx' = fx with [i] <- real.min f_v fx[i]
+         let fx' = fx with [i] <- (copy [real.min f_v fx[i]])[0] -- XXX
          let (fx0', best_idx') = min_and_idx (fx0, best_idx) (f_v, i)
          in (fx0', best_idx', fx', x'))
 
@@ -190,8 +190,8 @@ module mk_least_squares (real: real) (rand: rng_engine)
     let vars_to_free_vars = scatter (replicate num_vars (-1))
                                     free_vars_to_vars (iota num_free_vars)
     let (x, lower_bounds, upper_bounds) =
-      unzip (map (\(_, _, {initial_value, lower_bound, upper_bound}) ->
-                  (initial_value, lower_bound, upper_bound)) free_vars)
+      unzip3 (map (\(_, _, {initial_value, lower_bound, upper_bound}) ->
+                   (initial_value, lower_bound, upper_bound)) free_vars)
 
     let rms_of_error (err: real) = real.(sqrt (err * (i32 10000 / i32 num_observed)))
 
