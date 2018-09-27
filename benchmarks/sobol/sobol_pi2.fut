@@ -1,8 +1,12 @@
-import "/futlib/sobol"
-import "/futlib/sobol-dir-50"
+import "lib/github.com/diku-dk/sobol/sobol"
+import "lib/github.com/diku-dk/sobol/sobol-dir-50"
 
 module sobol =
   Sobol sobol_dir { let D = 2 }
+
+-- ==
+-- entry: main
+-- input { 1000000 } output { 3.142000f64 }
 
 let main (n:i32) : f64 =
   let hits =

@@ -2,9 +2,8 @@
 -- entry: main
 -- input { 1000 } output { 3.142000f64 }
 
-import "/futlib/sobol"
-import "/futlib/array"
-import "/futlib/sobol-dir-50"
+import "lib/github.com/diku-dk/sobol/sobol"
+import "lib/github.com/diku-dk/sobol/sobol-dir-50"
 
 module S2 = Sobol sobol_dir { let D = 2 }
 

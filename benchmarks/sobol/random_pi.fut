@@ -1,9 +1,8 @@
 -- ==
 -- entry: main
--- input { 1000 } output { 3.144000f64 }
+-- input { 1000000 } output { 3.144000f64 }
 
-import "/futlib/random"
-import "/futlib/array"
+import "lib/github.com/diku-dk/cpprandom/random"
 
 module rng_reduce (rng : rng_engine with int.t = u32) = {
 
