@@ -18,31 +18,41 @@ let rec_m [n] (dir_v: [n]i32) (i: i32): i32 =
   let bit = index_of_least_significant_0 i
   in unsafe dir_v[bit]
 
-let sobol_chunk [n] (dir_v: [n]i32) (x: i32) (chunk: i32): [chunk]f64 =
-  let divisor = 2.0 ** r64 n
+let sobol_chunk [n] (dir_v: [n]i32) (x: i32) (chunk: i32): [chunk]f32 =
+  let divisor = 2.0 ** r32 n
   let sob_beg = sobol_ind dir_v (x+1)
   let contrbs = map (\i ->
                         if i==0 then sob_beg
                         else rec_m dir_v (i+x))
                     (iota chunk)
   let vct_i32s= scan (^) 0 contrbs
-  in map (\y -> r64 y / divisor) vct_i32s
+  in map (\y -> r32 y / divisor) vct_i32s
 
 let dir_v = [536870912, 268435456, 134217728, 67108864, 33554432, 16777216, 8388608, 4194304, 2097152, 1048576, 524288, 262144, 131072, 65536, 32768, 16384, 8192, 4096, 2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1]
 
 -- ==
 -- entry: chunked
--- input { 1000000 }
-entry chunked (n: i32): f64 =
+-- input { 30000000 }
+entry chunked (n: i32): f32 =
   let sobol_nums =
-    stream_map (\[c] (xs: [c]i32): [c]f64 ->
+    stream_map (\[c] (xs: [c]i32): [c]f32 ->
                   sobol_chunk dir_v (if c == 0 then 0 else unsafe xs[0]) c)
                (iota n)
   in reduce (+) 0.0 sobol_nums
 
 -- ==
 -- entry: independent
--- input { 1000000 }
+-- input { 30000000 }
 entry independent (n:i32) =
-  let norm = 2.0**r64 n
-  in map (\i -> f64.i32(sobol_ind dir_v i)/norm) (iota n) |> f64.sum
+  let norm = 2.0**r32 n
+  in map (\i -> f32.i32(sobol_ind dir_v i)/norm) (iota n) |> f32.sum
+
+import "lib/github.com/diku-dk/cpprandom/random"
+
+-- ==
+-- entry: cpprandom
+-- input { 30000000 }
+module R = minstd_rand
+entry cpprandom (n:i32) =
+  let rngs = R.rng_from_seed [n] |> R.split_rng n
+  in map R.rand rngs |> map (.2) |> u32.sum
