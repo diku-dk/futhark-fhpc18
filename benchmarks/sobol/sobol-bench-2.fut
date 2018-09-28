@@ -28,7 +28,7 @@ let sobol_chunk [n] (dir_v: [n]i32) (x: i32) (chunk: i32): [chunk]f32 =
   let vct_i32s= scan (^) 0 contrbs
   in map (\y -> r32 y / divisor) vct_i32s
 
-let dir_v = [536870912, 268435456, 134217728, 67108864, 33554432, 16777216, 8388608, 4194304, 2097152, 1048576, 524288, 262144, 131072, 65536, 32768, 16384, 8192, 4096, 2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1]
+let dir_v = take (intrinsics.opaque 30) [536870912, 268435456, 134217728, 67108864, 33554432, 16777216, 8388608, 4194304, 2097152, 1048576, 524288, 262144, 131072, 65536, 32768, 16384, 8192, 4096, 2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1]
 
 -- ==
 -- entry: independent chunked stream_map cpprandom
@@ -52,5 +52,12 @@ entry independent (n:i32) =
 import "lib/github.com/diku-dk/cpprandom/random"
 module R = minstd_rand
 entry cpprandom (n:i32) =
-  let rngs = R.rng_from_seed [n] |> R.split_rng n
-  in map R.rand rngs |> map (.2) |> u32.sum
+  stream_red (+)
+             (\[c] (xs: [c]i32): f32 ->
+                let i = if c == 0 then 0 else unsafe xs[0]
+                let (x, _) = loop (acc, rng) = (0f32, R.rng_from_seed [i]) for i < c do
+                               let (rng', x) = R.rand rng
+                               in (acc + f32.u32 x, rng')
+                in x)
+             (iota n)
+
